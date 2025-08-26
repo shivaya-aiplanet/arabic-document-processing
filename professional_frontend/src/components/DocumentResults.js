@@ -207,123 +207,114 @@ const DocumentResults = ({ result, onReset }) => {
     setNewRowValue('');
   };
 
-  // PDF Generation Function
-  const generatePDF = () => {
+  // Alternative PDF Generation using HTML to Canvas
+  const generatePDFAlternative = () => {
     try {
-      console.log('Starting PDF generation...');
-      console.log('PDF Table Data:', pdfTableData);
+      console.log('Starting alternative PDF generation...');
 
       if (!pdfTableData || pdfTableData.length === 0) {
         alert('No data available to generate PDF');
         return;
       }
 
-      // Check if jsPDF is available globally
-      let jsPDF;
+      // Create HTML content with proper Arabic support
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html dir="rtl" lang="ar">
+        <head>
+          <meta charset="UTF-8">
+          <style>
+            body {
+              font-family: 'Arial Unicode MS', Arial, sans-serif;
+              direction: rtl;
+              text-align: right;
+              margin: 20px;
+              background: white;
+            }
+            .header {
+              text-align: center;
+              margin-bottom: 30px;
+              direction: ltr;
+            }
+            .title {
+              font-size: 24px;
+              font-weight: bold;
+              margin-bottom: 10px;
+              color: #2d3748;
+            }
+            .date {
+              font-size: 14px;
+              color: #666;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-top: 20px;
+              direction: rtl;
+            }
+            th, td {
+              border: 1px solid #ddd;
+              padding: 12px;
+              text-align: right;
+              direction: rtl;
+            }
+            th {
+              background-color: #2d3748;
+              color: white;
+              font-weight: bold;
+            }
+            tr:nth-child(even) {
+              background-color: #f8f9fa;
+            }
+            .arabic-text {
+              font-size: 14px;
+              line-height: 1.6;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="title">Arabic Document Data Extraction</div>
+            <div class="date">Generated: ${new Date().toLocaleDateString()}</div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>القيمة</th>
+                <th>الحقل</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${pdfTableData.map(row => `
+                <tr>
+                  <td class="arabic-text">${row.value || 'غير متوفر'}</td>
+                  <td class="arabic-text">${row.key || 'غير متوفر'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </body>
+        </html>
+      `;
 
-      if (typeof window.jspdf !== 'undefined' && window.jspdf.jsPDF) {
-        jsPDF = window.jspdf.jsPDF;
-      } else if (typeof window.jsPDF !== 'undefined') {
-        jsPDF = window.jsPDF;
-      } else {
-        alert('PDF library not loaded. Please refresh the page and try again.');
-        return;
-      }
+      // Create a new window and print
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
 
-      if (!jsPDF) {
-        alert('jsPDF constructor not found. Please refresh the page and try again.');
-        return;
-      }
-
-      // Create new PDF document
-      const doc = new jsPDF();
-      console.log('PDF document created');
-
-      // Check if autoTable is available
-      if (typeof doc.autoTable !== 'function') {
-        alert('PDF table plugin not loaded. Please refresh the page and try again.');
-        return;
-      }
-
-      // Add title
-      doc.setFontSize(16);
-      doc.text('Arabic Document Data Extraction', 105, 20, { align: 'center' });
-
-      // Add date
-      doc.setFontSize(10);
-      const currentDate = new Date().toLocaleDateString();
-      doc.text(`Generated: ${currentDate}`, 105, 30, { align: 'center' });
-
-      // Prepare table data - ensure no undefined values
-      const tableData = pdfTableData.map(row => [
-        row.key || 'N/A',
-        row.value || 'N/A'
-      ]);
-
-      console.log('Table data prepared:', tableData);
-
-      // Add table using jsPDF autoTable
-      doc.autoTable({
-        head: [['Field', 'Value']],
-        body: tableData,
-        startY: 40,
-        styles: {
-          fontSize: 10,
-          cellPadding: 5,
-          halign: 'left',
-          textColor: [0, 0, 0]
-        },
-        headStyles: {
-          fillColor: [41, 49, 69],
-          textColor: [255, 255, 255],
-          fontStyle: 'bold',
-          halign: 'center'
-        },
-        columnStyles: {
-          0: { cellWidth: 60 }, // Key column
-          1: { cellWidth: 120 } // Value column
-        },
-        margin: { top: 40, right: 15, bottom: 20, left: 15 }
-      });
-
-      console.log('Table added to PDF');
-
-      // Save the PDF
-      const filename = `arabic_document_data_${new Date().getTime()}.pdf`;
-      console.log('Saving PDF as:', filename);
-
-      // Try to save the PDF
-      try {
-        doc.save(filename);
-        console.log('PDF generation completed successfully');
-        alert('PDF downloaded successfully!');
-      } catch (saveError) {
-        console.error('Error saving PDF:', saveError);
-
-        // Fallback: try to download as blob
-        try {
-          const pdfBlob = doc.output('blob');
-          const url = URL.createObjectURL(pdfBlob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = filename;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          URL.revokeObjectURL(url);
-          console.log('PDF downloaded using fallback method');
-          alert('PDF downloaded successfully using fallback method!');
-        } catch (fallbackError) {
-          console.error('Fallback PDF save failed:', fallbackError);
-          alert('Failed to download PDF. Please try again.');
-        }
-      }
+      // Wait for content to load then print
+      setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+      }, 500);
 
     } catch (error) {
       console.error('Error generating PDF:', error);
-      alert(`Error generating PDF: ${error.message}`);
+      alert('Error generating PDF. Please try again.');
     }
   };
+
+
 
 
   const handleDownloadResults = () => {
@@ -589,11 +580,11 @@ const DocumentResults = ({ result, onReset }) => {
                     {pdfTableData.length} rows
                   </span>
                   <button
-                    onClick={generatePDF}
+                    onClick={generatePDFAlternative}
                     className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors flex items-center space-x-2"
                   >
                     <Download className="w-4 h-4" />
-                    <span>Download PDF</span>
+                    <span>Print Arabic PDF</span>
                   </button>
                 </div>
               </div>
