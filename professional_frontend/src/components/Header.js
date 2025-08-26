@@ -1,44 +1,14 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { 
-  FileText, 
-  Activity, 
-  RefreshCw, 
-  Home, 
+import {
+  Home,
   FolderOpen,
-  CheckCircle,
-  XCircle,
-  AlertCircle
+  AlertCircle,
+  LogOut
 } from 'lucide-react';
 
-const Header = ({ apiHealth, onRefreshHealth, onReset }) => {
+const Header = ({ apiHealth, onRefreshHealth, onReset, onLogout }) => {
   const location = useLocation();
-
-  const getHealthIcon = () => {
-    if (!apiHealth) return <AlertCircle className="w-4 h-4 text-yellow-500" />;
-    
-    switch (apiHealth.status) {
-      case 'healthy':
-        return <CheckCircle className="w-4 h-4 text-green-500" />;
-      case 'unhealthy':
-        return <XCircle className="w-4 h-4 text-red-500" />;
-      default:
-        return <AlertCircle className="w-4 h-4 text-yellow-500" />;
-    }
-  };
-
-  const getHealthText = () => {
-    if (!apiHealth) return 'Checking...';
-    
-    switch (apiHealth.status) {
-      case 'healthy':
-        return 'All Systems Operational';
-      case 'unhealthy':
-        return 'System Issues Detected';
-      default:
-        return 'Status Unknown';
-    }
-  };
 
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
@@ -93,7 +63,7 @@ const Header = ({ apiHealth, onRefreshHealth, onReset }) => {
             </Link>
           </nav>
 
-          {/* System Status - Simplified */}
+          {/* System Status and Logout */}
           <div className="flex items-center space-x-4">
             {/* Service Status Details */}
             {apiHealth && apiHealth.services && (
@@ -116,6 +86,16 @@ const Header = ({ apiHealth, onRefreshHealth, onReset }) => {
                 </div>
               </div>
             )}
+
+            {/* Logout Button */}
+            <button
+              onClick={onLogout}
+              className="flex items-center space-x-2 px-3 py-2 rounded-lg text-text-secondary hover:text-red-600 hover:bg-red-50 transition-colors"
+              title="Logout"
+            >
+              <LogOut className="w-4 h-4" />
+              <span className="font-medium">Logout</span>
+            </button>
           </div>
         </div>
       </div>

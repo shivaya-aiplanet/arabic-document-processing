@@ -6,6 +6,7 @@ import DocumentUpload from './components/DocumentUpload';
 import ProcessingStatus from './components/ProcessingStatus';
 import DocumentResults from './components/DocumentResults';
 import DocumentList from './components/DocumentList';
+import LoginPage from './components/LoginPage';
 import { apiService } from './services/apiService';
 import './index.css';
 
@@ -15,11 +16,22 @@ function App() {
   const [documentResult, setDocumentResult] = useState(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [apiHealth, setApiHealth] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Check API health on mount
+  // Check authentication status on mount
   useEffect(() => {
-    checkApiHealth();
+    const authStatus = localStorage.getItem('isAuthenticated');
+    if (authStatus === 'true') {
+      setIsAuthenticated(true);
+    }
   }, []);
+
+  // Check API health on mount (only if authenticated)
+  useEffect(() => {
+    if (isAuthenticated) {
+      checkApiHealth();
+    }
+  }, [isAuthenticated]);
 
   const checkApiHealth = async () => {
     try {
@@ -84,13 +96,33 @@ function App() {
     }
   };
 
+  const handleLogin = () => {
+    setIsAuthenticated(true);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('isAuthenticated');
+    setIsAuthenticated(false);
+    // Reset all state when logging out
+    setCurrentDocument(null);
+    setProcessingStatus(null);
+    setDocumentResult(null);
+    setApiHealth(null);
+  };
+
+  // If not authenticated, show login page
+  if (!isAuthenticated) {
+    return <LoginPage onLogin={handleLogin} />;
+  }
+
   return (
     <Router>
       <div className="min-h-screen bg-bg-light">
-        <Header 
-          apiHealth={apiHealth} 
+        <Header
+          apiHealth={apiHealth}
           onRefreshHealth={checkApiHealth}
           onReset={handleReset}
+          onLogout={handleLogout}
         />
         
         <div className="flex">
