@@ -11,6 +11,10 @@ from datetime import datetime
 from typing import Optional, Dict, Any, List
 from io import BytesIO
 import base64
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware

@@ -10,16 +10,12 @@ from typing import Dict, Any, Optional
 from PIL import Image
 import requests
 
-try:
-    import autogen
-    from autogen import AssistantAgent, UserProxyAgent, GroupChat, GroupChatManager
-except ImportError:
-    # Fallback if autogen is not available
-    autogen = None
-    AssistantAgent = None
-    UserProxyAgent = None
-    GroupChat = None
-    GroupChatManager = None
+# Disable autogen for now to avoid proxy issues
+autogen = None
+AssistantAgent = None
+UserProxyAgent = None
+GroupChat = None
+GroupChatManager = None
 
 class DocumentProcessingAgent:
     """Agent-based document processing using Autogen + Groq Llama"""
@@ -48,19 +44,29 @@ class DocumentProcessingAgent:
     
     def _setup_agents(self):
         """Setup Autogen agents for document processing"""
-        
+
+        if AssistantAgent is None:
+            print("⚠️ Autogen not available, using fallback mode")
+            self.ocr_agent = None
+            self.extraction_agent = None
+            self.reviewer_agent = None
+            self.coherence_agent = None
+            self.group_chat = None
+            self.manager = None
+            return
+
         # OCR Specialist Agent
         self.ocr_agent = AssistantAgent(
             name="OCR_Specialist",
-            system_message="""أنت خبير في استخراج النصوص العربية من الوثائق الحكومية. 
+            system_message="""أنت خبير في استخراج النصوص العربية من الوثائق الحكومية.
             مهمتك هي تحليل النص المستخرج من OCR وتنظيفه وتحسينه.
-            
+
             قم بما يلي:
             1. تنظيف النص من الأخطاء الشائعة في OCR
             2. تصحيح الأخطاء الإملائية البسيطة
             3. تنظيم النص بشكل منطقي
             4. الحفاظ على المعنى الأصلي
-            
+
             أجب باللغة العربية فقط.""",
             llm_config=self.llm_config
         )
