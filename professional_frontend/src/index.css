@@ -1,0 +1,130 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  
+  body {
+    @apply bg-bg-light text-text-primary;
+  }
+}
+
+@layer components {
+  /* Button Components */
+  .btn-primary {
+    @apply bg-emerald text-white px-6 py-3 rounded-xl font-medium hover:bg-emerald-600 transition-all duration-300 shadow-sm hover:shadow-md;
+  }
+  
+  .btn-secondary {
+    @apply bg-white text-text-secondary border border-gray-300 px-6 py-3 rounded-xl font-medium hover:bg-gray-50 transition-all duration-300 shadow-sm hover:shadow-md;
+  }
+  
+  .btn-outline {
+    @apply border-2 border-emerald text-emerald px-6 py-3 rounded-xl font-medium hover:bg-emerald hover:text-white transition-all duration-300;
+  }
+  
+  /* Card Components */
+  .card {
+    @apply bg-white rounded-xl shadow-card hover:shadow-card-hover transition-all duration-300 p-8;
+  }
+  
+  .card-hover {
+    @apply hover:-translate-y-2 hover:scale-105;
+  }
+  
+  /* Input Components */
+  .input-field {
+    @apply w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald focus:border-emerald outline-none transition-all duration-200;
+  }
+  
+  /* Status Indicators */
+  .status-processing {
+    @apply bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium;
+  }
+  
+  .status-completed {
+    @apply bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium;
+  }
+  
+  .status-failed {
+    @apply bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium;
+  }
+  
+  /* Progress Bar */
+  .progress-bar {
+    @apply w-full bg-gray-200 rounded-full h-2;
+  }
+  
+  .progress-fill {
+    @apply bg-gradient-to-r from-emerald-400 to-cyan-400 h-2 rounded-full transition-all duration-500;
+  }
+  
+  /* Entity Cards */
+  .entity-card {
+    @apply bg-white border border-gray-200 rounded-xl p-4 hover:border-emerald hover:shadow-md transition-all duration-300;
+  }
+  
+  .entity-label {
+    @apply text-sm font-medium text-text-secondary mb-1;
+  }
+  
+  .entity-value {
+    @apply text-text-primary font-medium;
+  }
+  
+  /* Sidebar */
+  .sidebar {
+    @apply bg-white border-r border-gray-200 h-full overflow-y-auto;
+  }
+  
+  .sidebar-collapsed {
+    @apply w-16;
+  }
+  
+  .sidebar-expanded {
+    @apply w-80;
+  }
+  
+  /* Animations */
+  .animate-pulse-slow {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  
+  /* Custom Scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent;
+  }
+  
+  .bg-gradient-primary {
+    @apply bg-gradient-to-r from-emerald-400 to-cyan-400;
+  }
+  
+  .border-gradient {
+    border-image: linear-gradient(to right, #34D399, #22D3EE) 1;
+  }
+}
