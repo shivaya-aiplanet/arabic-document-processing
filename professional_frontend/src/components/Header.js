@@ -17,7 +17,7 @@ const Header = ({ apiHealth, onRefreshHealth, onReset, onLogout }) => {
           {/* AIplanet Logo - Left Corner */}
           <div className="absolute left-0 top-1/2 transform -translate-y-1/2">
             <img
-              src="/aiplanetlogo.png"
+              src="/ai_planet_full_logo.svg"
               alt="AIplanet Logo"
               className="w-32 h-32 object-contain"
             />
