@@ -27,7 +27,7 @@ import requests
 # Import agent components
 from agents.document_agent import DocumentProcessingAgent
 from utils.pdf_converter import PDFConverter
-from utils.qari_client import QARIClient
+from utils.google_vision_ocr_client import GoogleVisionOCRClient
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -51,42 +51,42 @@ app.add_middleware(
 # Global components
 document_agent = None
 pdf_converter = None
-qari_client = None
+google_vision_client = None
 
 # Configuration from environment variables
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-RUNPOD_QARI_URL = os.getenv("RUNPOD_QARI_URL")
+GOOGLE_VISION_API_KEY = os.getenv("GOOGLE_VISION_API_KEY")
 
 if not GROQ_API_KEY:
     raise ValueError("GROQ_API_KEY environment variable is required")
-if not RUNPOD_QARI_URL:
-    raise ValueError("RUNPOD_QARI_URL environment variable is required")
+if not GOOGLE_VISION_API_KEY:
+    raise ValueError("GOOGLE_VISION_API_KEY environment variable is required")
 
 @app.on_event("startup")
 async def startup_event():
     """Initialize components on startup"""
-    global document_agent, pdf_converter, qari_client
-    
+    global document_agent, pdf_converter, google_vision_client
+
     try:
         print("🚀 Initializing Arabic Document Processing Demo...")
-        
+
         # Initialize PDF converter
         pdf_converter = PDFConverter()
         print("✅ PDF Converter initialized")
-        
-        # Initialize QARI client
-        qari_client = QARIClient(runpod_url=RUNPOD_QARI_URL)
-        print("✅ QARI Client initialized")
-        
+
+        # Initialize Google Vision client
+        google_vision_client = GoogleVisionOCRClient(api_key=GOOGLE_VISION_API_KEY)
+        print("✅ Google Vision Client initialized")
+
         # Initialize document processing agent
         document_agent = DocumentProcessingAgent(
             groq_api_key=GROQ_API_KEY,
-            qari_client=qari_client
+            qari_client=google_vision_client  # Using Google Vision as OCR client
         )
         print("✅ Document Processing Agent initialized")
-        
+
         print("🎉 All components ready!")
-        
+
     except Exception as e:
         print(f"❌ Startup failed: {e}")
 
@@ -100,7 +100,7 @@ async def root():
         "components": {
             "document_agent": document_agent is not None,
             "pdf_converter": pdf_converter is not None,
-            "qari_client": qari_client is not None
+            "google_vision_client": google_vision_client is not None
         }
     }
 
@@ -113,12 +113,12 @@ async def health_check():
         "components": {}
     }
     
-    # Check QARI connection
-    if qari_client:
-        qari_status = await qari_client.health_check()
-        health_status["components"]["qari"] = qari_status
+    # Check Google Vision connection
+    if google_vision_client:
+        google_vision_status = await google_vision_client.health_check()
+        health_status["components"]["google_vision"] = google_vision_status
     else:
-        health_status["components"]["qari"] = {"status": "not_initialized"}
+        health_status["components"]["google_vision"] = {"status": "not_initialized"}
     
     # Check Groq API
     if document_agent:
@@ -307,30 +307,44 @@ async def reanalyze_text(request: dict):
         print(f"❌ Re-analysis failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/test-qari")
-async def test_qari_connection():
-    """Test QARI connection on RunPod"""
+@app.get("/test-google-vision")
+async def test_google_vision_connection():
+    """Test Google Vision OCR connection"""
     try:
-        if not qari_client:
-            raise HTTPException(status_code=500, detail="QARI client not initialized")
-        
-        # Test with sample image
-        test_image_path = "data/test_pdfs/arabic_test.jpg"
-        if not os.path.exists(test_image_path):
-            raise HTTPException(status_code=404, detail="Test image not found")
-        
-        image = Image.open(test_image_path)
-        result = await qari_client.extract_text(image)
-        
+        if not google_vision_client:
+            raise HTTPException(status_code=500, detail="Google Vision client not initialized")
+
+        # Just test the health check for now
+        health_result = await google_vision_client.health_check()
+
         return JSONResponse(content={
             "timestamp": datetime.now().isoformat(),
-            "test_status": "success" if result["success"] else "failed",
-            "result": result
+            "test_status": "success" if health_result.get("status") == "healthy" else "failed",
+            "health_check": health_result,
+            "message": "Google Vision OCR client is ready to process documents"
         })
-        
+
     except Exception as e:
-        print(f"❌ QARI test failed: {e}")
+        print(f"❌ Google Vision test failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/documents")
+async def get_documents():
+    """Get list of processed documents (placeholder for now)"""
+    return {
+        "documents": [],
+        "total": 0,
+        "message": "Document storage not implemented yet"
+    }
+
+@app.get("/result/{document_id}")
+async def get_result(document_id: str):
+    """Get processing result for a document (placeholder for now)"""
+    return {
+        "document_id": document_id,
+        "status": "not_found",
+        "message": "Document result storage not implemented yet"
+    }
 
 @app.get("/test-agent")
 async def test_agent():

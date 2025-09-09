@@ -22,13 +22,13 @@ class DocumentProcessingAgent:
     
     def __init__(self, groq_api_key: str, qari_client=None):
         self.groq_api_key = groq_api_key
-        self.qari_client = qari_client
+        self.ocr_client = qari_client  # Can be QARI, Google Vision, or any OCR client
         
         # Configure Groq LLM for Autogen
         self.llm_config = {
             "config_list": [
                 {
-                    "model": "llama3-70b-8192",
+                    "model": "llama-3.1-8b-instant",
                     "api_key": groq_api_key,
                     "base_url": "https://api.groq.com/openai/v1",
                     "api_type": "openai"
@@ -179,16 +179,16 @@ class DocumentProcessingAgent:
         }
         
         try:
-            # Step 1: OCR with QARI
+            # Step 1: OCR with Google Vision (or other OCR client)
             print(f"🔄 Page {page_number}: Running OCR...")
-            if self.qari_client:
-                ocr_result = await self.qari_client.extract_text(image)
+            if self.ocr_client:
+                ocr_result = await self.ocr_client.extract_text(image)
                 result["ocr_result"] = ocr_result
-                
+
                 if not ocr_result.get("success"):
                     result["error"] = f"OCR failed: {ocr_result.get('error')}"
                     return result
-                
+
                 extracted_text = ocr_result.get("text", "")
             else:
                 # Fallback: simulate OCR for testing
@@ -268,6 +268,7 @@ class DocumentProcessingAgent:
     async def _extract_entities(self, text: str) -> Dict[str, Any]:
         """Extract entities using extraction agent"""
         try:
+            print(f"🔍 Extracting entities from text ({len(text)} chars)...")
             prompt = f"""استخرج أي معلومات مفيدة من النص التالي:
 
 النص: {text}
@@ -427,6 +428,7 @@ class DocumentProcessingAgent:
     async def _classify_document(self, text: str) -> Dict[str, Any]:
         """Classify document using classifier agent"""
         try:
+            print(f"📋 Classifying document...")
             prompt = f"صنف الوثيقة التالية:\n\n{text}"
             
             response = await self._call_groq_api(prompt, "Document_Classifier")
@@ -470,34 +472,38 @@ class DocumentProcessingAgent:
     async def _call_groq_api(self, prompt: str, agent_role: str) -> Dict[str, Any]:
         """Call Groq API directly"""
         try:
+            print(f"🔄 Calling Groq API for {agent_role}...")
             url = "https://api.groq.com/openai/v1/chat/completions"
             headers = {
                 "Authorization": f"Bearer {self.groq_api_key}",
                 "Content-Type": "application/json"
             }
-            
+
             payload = {
-                "model": "llama3-70b-8192",
+                "model": "llama-3.1-8b-instant",
                 "messages": [{"role": "user", "content": prompt}],
                 "max_tokens": 2000,
                 "temperature": 0.1
             }
-            
+
             response = requests.post(url, headers=headers, json=payload, timeout=60)
-            
+
             if response.status_code == 200:
                 result = response.json()
+                print(f"✅ Groq API call successful for {agent_role}")
                 return {
                     "success": True,
                     "content": result["choices"][0]["message"]["content"]
                 }
             else:
+                print(f"❌ Groq API error {response.status_code} for {agent_role}: {response.text}")
                 return {
                     "success": False,
-                    "error": f"API Error {response.status_code}"
+                    "error": f"API Error {response.status_code}: {response.text}"
                 }
-                
+
         except Exception as e:
+            print(f"❌ Groq API exception for {agent_role}: {e}")
             return {
                 "success": False,
                 "error": str(e)
